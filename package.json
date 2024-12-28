@@ -1,0 +1,58 @@
+{
+  "name": "vsinsights",
+  "displayName": "vsInsights",
+  "description": "track your coding sessions",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vsinsights.helloWorld",
+        "title": "Hello World"
+      },
+      {
+        "command": "vsinsights.login",
+        "title": "Login to vsinsights"
+      },
+      {
+        "command": "vsinsights.signup",
+        "title": "Register to vsinsights"
+      },
+      {
+        "command": "vsinsights.show",
+        "title": "Show User Id"
+      },
+      {
+        "command": "vsinsights.logout",
+        "title": "Logout from vsinsights"
+      },
+      {
+        "command": "vsinsights.showAuthPanel",
+        "title": "showAuthPanel"
+      }
+    ]
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.96.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "eslint": "^9.16.0"
+  },
+  "dependencies": {
+    "axios": "^1.7.9"
+  }
+}

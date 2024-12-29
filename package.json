@@ -1,7 +1,7 @@
 {
   "name": "vsinsights",
   "displayName": "vsInsights",
-  "description": "track your coding sessions",
+  "description": "Track your coding sessions",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.96.0"
@@ -9,7 +9,6 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
   "main": "./extension.js",
   "contributes": {
     "commands": [
@@ -35,7 +34,19 @@
       },
       {
         "command": "vsinsights.showAuthPanel",
-        "title": "showAuthPanel"
+        "title": "Show Authentication Panel"
+      },
+      {
+        "command": "vsinsights.showProgress",
+        "title": "VS Insights: Show Progress"
+      }
+    ],
+    "languages": [
+      {
+        "id": "*",
+        "extensions": ["*"],
+        "aliases": ["All Languages"],
+        "mimetypes": ["*/*"]
       }
     ]
   },

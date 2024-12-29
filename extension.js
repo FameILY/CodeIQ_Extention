@@ -1,267 +1,391 @@
-const vscode = require('vscode');
-const axios = require('axios');
-const fs = require('fs');
-const path = require('path');
+const vscode = require("vscode");
+// const axios = require('axios');
+const fs = require("fs");
+const path = require("path");
 
 // Local file to store user progress
-const PROGRESS_FILE = path.join(__dirname, 'progress.json');
+const PROGRESS_FILE = path.join(__dirname, "progress.json");
 const auth = require("./lib/auth");
 const user = require("./lib/user");
 
+let otp = null;
+
 // Activate the extension
 async function activate(context) {
-    console.log('Habit Tracker Extension is now active!');
+  console.log("CodeIQ Extension is now active!");
 
-    // Register the command to show the tree progress
+  // Register the command to show the tree progress
 
-    // Register the command to show user progress
-    const showProgressCommand = vscode.commands.registerCommand('vsinsights.showProgress', async () => {
-        const userId = await auth.getId(context);
-        if (!userId) {
-            vscode.window.showInformationMessage('Please sign in first.');
-            return;
-        }
-        try {
-            vscode.window.showInformationMessage(`Your Progress:`);
-        } catch (error) {
-            vscode.window.showErrorMessage(`Error fetching progress from the backend.${error}`);
-        }
+  // Register the command to show user progress
+  const showProgressCommand = vscode.commands.registerCommand(
+    "vsinsights.showProgress",
+    async () => {
+      const userId = await auth.getId(context);
+      if (!userId) {
+        vscode.window.showInformationMessage("Please sign in first.");
+        return;
+      }
+      try {
+        vscode.window.showInformationMessage(`Your Progress:`);
+      } catch (error) {
+        vscode.window.showErrorMessage(
+          `Error fetching progress from the backend.${error}`
+        );
+      }
+    }
+  );
+
+  context.subscriptions.push(showProgressCommand);
+
+  // Monitor file changes and update progress
+  vscode.workspace.onDidChangeTextDocument(async (event) => {
+    const userId = await auth.getId(context);
+    if (!userId) return;
+
+    const progress = loadProgress();
+
+    event.contentChanges.forEach((change) => {
+      const { range, text } = change;
+      progress.linesCreated += text.split("\n").length - 1;
+      progress.linesDeleted += range.end.line - range.start.line;
     });
 
-    context.subscriptions.push(showProgressCommand);
+    progress.totalLinesChanged = progress.linesCreated + progress.linesDeleted;
+    saveProgress(progress);
 
-    // Monitor file changes and update progress
-    vscode.workspace.onDidChangeTextDocument(async (event) => {
-        const userId = await auth.getId(context);
-        if (!userId) return;
+    console.log(`Progress updated: ${JSON.stringify(progress)}`);
+  });
 
-        const progress = loadProgress();
+  // Monitor file creation
+  vscode.workspace.onDidCreateFiles(async (event) => {
+    const userId = await auth.getId(context);
+    if (!userId) return;
 
-        event.contentChanges.forEach((change) => {
-            const { range, text } = change;
-            progress.linesCreated += (text.split('\n').length - 1);
-            progress.linesDeleted += (range.end.line - range.start.line);
-        });
+    const progress = loadProgress();
+    progress.filesCreated += event.files.length;
+    saveProgress(progress);
+    console.log(`${event.files.length} file(s) created.`);
+  });
 
-        progress.totalLinesChanged = progress.linesCreated + progress.linesDeleted;
-        saveProgress(progress);
+  // Monitor file deletion
+  vscode.workspace.onDidDeleteFiles(async (event) => {
+    const userId = await auth.getId(context);
+    if (!userId) return;
 
-        console.log(`Progress updated: ${JSON.stringify(progress)}`);
-    });
+    const progress = loadProgress();
+    progress.filesDeleted += event.files.length;
+    saveProgress(progress);
+    console.log(`${event.files.length} file(s) deleted.`);
+  });
 
-    // Monitor file creation
-    vscode.workspace.onDidCreateFiles(async (event) => {
-        const userId = await auth.getId(context);
-        if (!userId) return;
+  // Show authentication panel for login
+  const paneldisposable = vscode.commands.registerCommand(
+    "vsinsights.showAuthPanel",
+    async () => {
+      const panel = vscode.window.createWebviewPanel(
+        "authPanel", // Internal identifier
+        "Authentication", // Title
+        vscode.ViewColumn.One, // Display in the first column
+        { enableScripts: true } // Enable JavaScript
+      );
 
-        const progress = loadProgress();
-        progress.filesCreated += event.files.length;
-        saveProgress(progress);
-        console.log(`${event.files.length} file(s) created.`);
-    });
+      const userId = await auth.getId(context);
+      if (!userId) {
+        panel.webview.html = getAuthPage();
+      } else {
+        const userEmail = await user.getUserData(userId);
+        panel.webview.html = getHomeScreen(userEmail);
+      }
 
-    // Monitor file deletion
-    vscode.workspace.onDidDeleteFiles(async (event) => {
-        const userId = await auth.getId(context);
-        if (!userId) return;
+      panel.webview.onDidReceiveMessage(
+        async (message) => {
+          switch (message.command) {
+            case "sendOtp":
+              otp = await auth.sendOtp(context, message.email);
+              console.log(otp);
 
-        const progress = loadProgress();
-        progress.filesDeleted += event.files.length;
-        saveProgress(progress);
-        console.log(`${event.files.length} file(s) deleted.`);
-    });
+              break;
+            case "verifyOtp":
+              const data = await auth.verifyOtp(
+                context,
+                otp,
+                message.userOtp,
+                message.email
+              );
 
-    // Show authentication panel for login
-    const paneldisposable = vscode.commands.registerCommand(
-        "vsinsights.showAuthPanel",
-        async () => {
-            const panel = vscode.window.createWebviewPanel(
-                "authPanel", // Internal identifier
-                "Authentication", // Title
-                vscode.ViewColumn.One, // Display in the first column
-                { enableScripts: true } // Enable JavaScript
-            );
+              data === "ok"
+                ? (panel.webview.html = getHomeScreen(message.email))
+                : (panel.webview.html = getAuthPage());
+              break;
+            case "openWebPage":
+              const url = vscode.Uri.parse(message.url);
+              vscode.env.openExternal(url);
 
-            const userId = await auth.getId(context);
-            if (!userId) {
-                panel.webview.html = getAuthPage();
-            } else {
-                const userName = await user.getUserData(userId);
-                panel.webview.html = getHomeScreen(userName);
-            }
+              break;
+            case "logout":
+              await auth.deleteUserId(context);
+              panel.webview.html = getAuthPage();
+              break;
+          }
+        },
+        undefined,
+        context.subscriptions
+      );
+    }
+  );
 
-            panel.webview.onDidReceiveMessage(
-                async (message) => {
-                    switch (message.command) {
-                        case "login":
-                            await auth.login(context, message.email, message.password);
-                            break;
-                        case "signup":
-                            await auth.signup(context, message.name, message.email, message.password);
-                            break;
-                        case "logout":
-                            await auth.deleteUserId(context);
-                            panel.webview.html = getAuthPage();
-                            break;
-                    }
-                },
-                undefined,
-                context.subscriptions
-            );
-        }
-    );
-
-    context.subscriptions.push(paneldisposable);
+  context.subscriptions.push(paneldisposable);
 }
 
 // Load progress data from the local file
 function loadProgress() {
-    if (fs.existsSync(PROGRESS_FILE)) {
-        try {
-            const data = fs.readFileSync(PROGRESS_FILE, 'utf-8');
-            return JSON.parse(data);
-        } catch (error) {
-            console.error('Error parsing progress.json:', error);
-        }
+  if (fs.existsSync(PROGRESS_FILE)) {
+    try {
+      const data = fs.readFileSync(PROGRESS_FILE, "utf-8");
+      return JSON.parse(data);
+    } catch (error) {
+      console.error("Error parsing progress.json:", error);
     }
+  }
 
-    const defaultProgress = {
-        linesCreated: 0,
-        linesDeleted: 0,
-        totalLinesChanged: 0,
-        filesCreated: 0,
-        filesDeleted: 0,
-    };
+  const defaultProgress = {
+    linesCreated: 0,
+    linesDeleted: 0,
+    totalLinesChanged: 0,
+    filesCreated: 0,
+    filesDeleted: 0,
+  };
 
-    saveProgress(defaultProgress);
-    return defaultProgress;
+  saveProgress(defaultProgress);
+  return defaultProgress;
 }
 
 // Save progress data to the local file
 function saveProgress(progress) {
-    fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2));
+  fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2));
 }
 
 // Get the HTML for the Authentication page
 function getAuthPage() {
-    return /*html*/ `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Authentication</title>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
-                button, input { padding: 10px; margin: 10px; font-size: 16px; }
-                .form-container { display: none; margin-top: 20px; }
-                .form-container input { display: block; margin: 5px auto; }
-                .form-container button { margin-top: 10px; }
-            </style>
-        </head>
-        <body>
-            <h1>VS Insights</h1>
-            <p>Choose an action:</p>
-            <button id="loginButton">Login</button>
-            <button id="signupButton">Signup</button>
+  return /*html*/ `
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        h2 {
+            color: #61dafb;
+            margin-bottom: 20px;
+        }
+        .form-container {
+            background: #2d2d2d;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 400px;
+        }
+        button, input {
+            width: 90%;
+            padding: 15px;
+            margin-top: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: #3c3c3c;
+            color: #ffffff;
+        }
+        button {
+            background-color: #61dafb;
+            color: #000;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #21a1f1;
+        }
+        input {
+            background-color: #3c3c3c;
+            color: #fff;
+        }
+        input:focus {
+            outline: none;
+            border-color: #61dafb;
+        }
+        .otp-input-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .otp-input-container input {
+            width: 40px;
+            text-align: center;
+            padding: 10px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div id="formContainer" class="form-container">
+        <h2 id="formTitle">Authentication</h2>
+        <form id="authForm">
+            <input type="email" id="emailField" placeholder="Email" required />
+            <button type="submit">Send OTP</button>
+        </form>
 
-            <div id="formContainer" class="form-container">
-                <h2 id="formTitle"></h2>
-                <form id="authForm">
-                    <input type="text" id="nameField" placeholder="Name" style="display: none;" />
-                    <input type="email" id="emailField" placeholder="Email" required />
-                    <input type="password" id="passwordField" placeholder="Password" required />
-                    <button type="submit">Submit</button>
-                </form>
+        <form id="otpForm" style="display: none;">
+            <h2>Enter OTP</h2>
+            <div class="otp-input-container">
+                <input type="text" maxlength="1" class="otp-field" required />
+                <input type="text" maxlength="1" class="otp-field" required />
+                <input type="text" maxlength="1" class="otp-field" required />
+                <input type="text" maxlength="1" class="otp-field" required />
+                <input type="text" maxlength="1" class="otp-field" required />
+                <input type="text" maxlength="1" class="otp-field" required />
             </div>
+            <button type="submit">Verify OTP</button>
+        </form>
+    </div>
 
-            <script>
-                const vscode = acquireVsCodeApi();
+    <script>
+        const vscode = acquireVsCodeApi();
 
-                const loginButton = document.getElementById('loginButton');
-                const signupButton = document.getElementById('signupButton');
-                const formContainer = document.getElementById('formContainer');
-                const formTitle = document.getElementById('formTitle');
-                const nameField = document.getElementById('nameField');
-                const emailField = document.getElementById('emailField');
-                const passwordField = document.getElementById('passwordField');
-                const authForm = document.getElementById('authForm');
+        const authForm = document.getElementById('authForm');
+        const otpForm = document.getElementById('otpForm');
+        const emailField = document.getElementById('emailField');
+        const otpFields = document.querySelectorAll('.otp-field');
 
-                let currentAction = '';
+        authForm.addEventListener('submit', (event) => {
+            event.preventDefault();
 
-                loginButton.addEventListener('click', () => {
-                    currentAction = 'login';
-                    formTitle.textContent = 'Login';
-                    nameField.style.display = 'none';
-                    emailField.value = '';
-                    passwordField.value = '';
-                    formContainer.style.display = 'block';
-                });
+            const data = {
+                command: 'sendOtp',
+                email: emailField.value,
+            };
+            vscode.postMessage(data);
 
-                signupButton.addEventListener('click', () => {
-                    currentAction = 'signup';
-                    formTitle.textContent = 'Signup';
-                    nameField.style.display = 'block';
-                    nameField.value = '';
-                    emailField.value = '';
-                    passwordField.value = '';
-                    formContainer.style.display = 'block';
-                });
+            authForm.style.display = 'none';
+            otpForm.style.display = 'block';
+            otpFields[0].focus();
+        });
 
-                authForm.addEventListener('submit', (event) => {
-                    event.preventDefault();
+        otpForm.addEventListener('submit', (event) => {
+            event.preventDefault();
 
-                    const data = {
-                        command: currentAction,
-                        email: emailField.value,
-                        password: passwordField.value,
-                    };
+            const otpValue = Array.from(otpFields).map(field => field.value).join('');
 
-                    if (currentAction === 'signup') {
-                        data.name = nameField.value;
-                    }
+            const otpData = {
+                command: 'verifyOtp',
+                userOtp: otpValue,
+                email: emailField.value,
+            };
+            vscode.postMessage(otpData);
+        });
 
-                    vscode.postMessage(data);
+        otpFields.forEach((field, index) => {
+            field.addEventListener('input', (event) => {
+                if (event.target.value.length === 1 && index < otpFields.length - 1) {
+                    otpFields[index + 1].focus();
+                }
+            });
 
-                    formContainer.style.display = 'none';
-                    nameField.value = '';
-                    emailField.value = '';
-                    passwordField.value = '';
-                });
-            </script>
-        </body>
-        </html>
+            field.addEventListener('keydown', (event) => {
+                if (event.key === 'Backspace' && index > 0 && !event.target.value) {
+                    otpFields[index - 1].focus();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
     `;
 }
 
 // Get the HTML for the Home screen after login
-function getHomeScreen(name) {
-    return /*html*/ `
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Home Page</title>
-            <style>
-                body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
-                button { padding: 10px 20px; margin: 10px; font-size: 16px; cursor: pointer; }
-            </style>
-        </head>
-        <body>
-            <h1>VS Insights</h1>
-            <p> Welcome ${name}</p>
-            <button id="logout">Logout </button>
+function getHomeScreen(email) {
+  return /*html*/ `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Home Page</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: #1e1e1e;
+                color: #ffffff;
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+            }
+            h1 {
+                color: #61dafb;
+                margin-bottom: 10px;
+            }
+            p {
+                font-size: 18px;
+                margin-bottom: 30px;
+            }
+            button {
+              margin: 10px;
+                padding: 15px 30px;
+                font-size: 16px;
+                color: #000;
+                background-color: #61dafb;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                transition: background-color 0.3s ease;
+            }
+            button:hover {
+                background-color: #21a1f1;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Code IQ</h1>
+        <p>Welcome, ${email}</p>
+        <button id="openWebPage">View Stats</button>
 
-            <script>
-                const vscode = acquireVsCodeApi();
+        <button id="logout">Logout</button>
+    
+        <script>
+            const vscode = acquireVsCodeApi();
+    
+            document.getElementById('logout').addEventListener('click', () => {
+                vscode.postMessage({ command: 'logout' });
+            });
 
-                document.getElementById('logout').addEventListener('click', () => {
-                    vscode.postMessage({ command: 'logout' });
-                });
-            </script>
-        </body>
-        </html>
+            document.getElementById('openWebPage').addEventListener('click', () => {
+                vscode.postMessage({ command: 'openWebPage', url: "http://localhost:3000" });
+            });
+        </script>
+    </body>
+    </html>
+    
     `;
 }
 
@@ -269,6 +393,6 @@ function getHomeScreen(name) {
 function deactivate() {}
 
 module.exports = {
-    activate,
-    deactivate,
+  activate,
+  deactivate,
 };

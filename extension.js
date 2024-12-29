@@ -22,6 +22,7 @@ async function activate(context) {
             return;
         }
         try {
+          
             vscode.window.showInformationMessage(`Your Progress:`);
         } catch (error) {
             vscode.window.showErrorMessage(`Error fetching progress from the backend.${error}`);

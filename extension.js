@@ -95,23 +95,33 @@ async function activate(context) {
     if (!userId) return;
 
     const progress = loadProgress();
-    console.log(progress)
+    // console.log(progress)
     try {
-      await axios.post("http://localhost:8000/sendProgress", {
-        userId,
-        progress: progress[userId]?.progress || {},
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
+      const date = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
+
+      const response = await axios.post(
+        "http://localhost:8000/sendProgress",
+        {
+          userId,
+          progress: progress[userId]?.progress[date] || {},
         },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data.progress != null) {
+        console.log("Progress sent to server.");
+
+        const result = await resetProgress(context);
+        console.log("Progress Reset Status: ", result)
       }
-    );
-      console.log("Progress sent to server.");
     } catch (error) {
       console.error("Error sending progress to server:", error);
     }
-  }, 5000);
+  }, 10000);
 
   const paneldisposable = vscode.commands.registerCommand(
     "vsinsights.showAuthPanel",
@@ -192,6 +202,23 @@ function createDefaultProgress() {
     filesCreated: 0,
     filesDeleted: 0,
   };
+}
+
+async function resetProgress(context){
+  const userId = await auth.getId(context);
+    if (!userId) return null;
+
+    const progress = loadProgress();
+    const today = getTodayDate();
+
+  
+    progress[userId].progress[today] = createDefaultProgress();
+    
+
+    
+    saveProgress(progress);
+    return "done"
+
 }
 
 function getTodayDate() {
@@ -346,9 +373,7 @@ function getAuthPage() {
         });
     </script>
 </body>
-</html>`
-
-    ;
+</html>`;
 }
 
 // Get the HTML for the Home screen after login
@@ -417,9 +442,7 @@ function getHomeScreen(email) {
             });
         </script>
     </body>
-    </html>`
-    
-    ;
+    </html>`;
 }
 
 // Deactivate the extension

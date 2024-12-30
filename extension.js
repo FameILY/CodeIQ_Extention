@@ -1,22 +1,17 @@
 const vscode = require("vscode");
-// const axios = require('axios');
 const fs = require("fs");
 const path = require("path");
+const axios = require("axios");
 
-// Local file to store user progress
 const PROGRESS_FILE = path.join(__dirname, "progress.json");
 const auth = require("./lib/auth");
 const user = require("./lib/user");
 
 let otp = null;
 
-// Activate the extension
 async function activate(context) {
   console.log("CodeIQ Extension is now active!");
 
-  // Register the command to show the tree progress
-
-  // Register the command to show user progress
   const showProgressCommand = vscode.commands.registerCommand(
     "vsinsights.showProgress",
     async () => {
@@ -37,56 +32,95 @@ async function activate(context) {
 
   context.subscriptions.push(showProgressCommand);
 
-  // Monitor file changes and update progress
   vscode.workspace.onDidChangeTextDocument(async (event) => {
     const userId = await auth.getId(context);
     if (!userId) return;
 
     const progress = loadProgress();
+    const today = getTodayDate();
+
+    if (!progress[userId]) progress[userId] = { progress: {} };
+    if (!progress[userId].progress[today]) {
+      progress[userId].progress[today] = createDefaultProgress();
+    }
+
+    const dayProgress = progress[userId].progress[today];
 
     event.contentChanges.forEach((change) => {
       const { range, text } = change;
-      progress.linesCreated += text.split("\n").length - 1;
-      progress.linesDeleted += range.end.line - range.start.line;
+      dayProgress.linesCreated += text.split("\n").length - 1;
+      dayProgress.linesDeleted += range.end.line - range.start.line;
     });
 
-    progress.totalLinesChanged = progress.linesCreated + progress.linesDeleted;
+    dayProgress.totalLinesChanged =
+      dayProgress.linesCreated + dayProgress.linesDeleted;
     saveProgress(progress);
-
-    console.log(`Progress updated: ${JSON.stringify(progress)}`);
+    console.log(`Progress updated: ${JSON.stringify(dayProgress)}`);
   });
 
-  // Monitor file creation
   vscode.workspace.onDidCreateFiles(async (event) => {
     const userId = await auth.getId(context);
     if (!userId) return;
 
     const progress = loadProgress();
-    progress.filesCreated += event.files.length;
+    const today = getTodayDate();
+
+    if (!progress[userId].progress[today]) {
+      progress[userId].progress[today] = createDefaultProgress();
+    }
+
+    progress[userId].progress[today].filesCreated += event.files.length;
     saveProgress(progress);
     console.log(`${event.files.length} file(s) created.`);
   });
 
-  // Monitor file deletion
   vscode.workspace.onDidDeleteFiles(async (event) => {
     const userId = await auth.getId(context);
     if (!userId) return;
 
     const progress = loadProgress();
-    progress.filesDeleted += event.files.length;
+    const today = getTodayDate();
+
+    if (!progress[userId].progress[today]) {
+      progress[userId].progress[today] = createDefaultProgress();
+    }
+
+    progress[userId].progress[today].filesDeleted += event.files.length;
     saveProgress(progress);
     console.log(`${event.files.length} file(s) deleted.`);
   });
 
-  // Show authentication panel for login
+  setInterval(async () => {
+    const userId = await auth.getId(context);
+    if (!userId) return;
+
+    const progress = loadProgress();
+    console.log(progress)
+    try {
+      await axios.post("http://localhost:8000/sendProgress", {
+        userId,
+        progress: progress[userId]?.progress || {},
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+      console.log("Progress sent to server.");
+    } catch (error) {
+      console.error("Error sending progress to server:", error);
+    }
+  }, 5000);
+
   const paneldisposable = vscode.commands.registerCommand(
     "vsinsights.showAuthPanel",
     async () => {
       const panel = vscode.window.createWebviewPanel(
-        "authPanel", // Internal identifier
-        "Authentication", // Title
-        vscode.ViewColumn.One, // Display in the first column
-        { enableScripts: true } // Enable JavaScript
+        "authPanel",
+        "Authentication",
+        vscode.ViewColumn.One,
+        { enableScripts: true }
       );
 
       const userId = await auth.getId(context);
@@ -103,7 +137,6 @@ async function activate(context) {
             case "sendOtp":
               otp = await auth.sendOtp(context, message.email);
               console.log(otp);
-
               break;
             case "verifyOtp":
               const data = await auth.verifyOtp(
@@ -120,7 +153,6 @@ async function activate(context) {
             case "openWebPage":
               const url = vscode.Uri.parse(message.url);
               vscode.env.openExternal(url);
-
               break;
             case "logout":
               await auth.deleteUserId(context);
@@ -137,34 +169,35 @@ async function activate(context) {
   context.subscriptions.push(paneldisposable);
 }
 
-// Load progress data from the local file
 function loadProgress() {
   if (fs.existsSync(PROGRESS_FILE)) {
     try {
-      const data = fs.readFileSync(PROGRESS_FILE, "utf-8");
-      return JSON.parse(data);
+      return JSON.parse(fs.readFileSync(PROGRESS_FILE, "utf-8"));
     } catch (error) {
       console.error("Error parsing progress.json:", error);
     }
   }
+  return {};
+}
 
-  const defaultProgress = {
+function saveProgress(progress) {
+  fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2));
+}
+
+function createDefaultProgress() {
+  return {
     linesCreated: 0,
     linesDeleted: 0,
     totalLinesChanged: 0,
     filesCreated: 0,
     filesDeleted: 0,
   };
-
-  saveProgress(defaultProgress);
-  return defaultProgress;
 }
 
-// Save progress data to the local file
-function saveProgress(progress) {
-  fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2));
+function getTodayDate() {
+  const today = new Date();
+  return today.toISOString().split("T")[0];
 }
-
 // Get the HTML for the Authentication page
 function getAuthPage() {
   return /*html*/ `
@@ -313,9 +346,9 @@ function getAuthPage() {
         });
     </script>
 </body>
-</html>
+</html>`
 
-    `;
+    ;
 }
 
 // Get the HTML for the Home screen after login
@@ -384,9 +417,9 @@ function getHomeScreen(email) {
             });
         </script>
     </body>
-    </html>
+    </html>`
     
-    `;
+    ;
 }
 
 // Deactivate the extension

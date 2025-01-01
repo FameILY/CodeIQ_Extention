@@ -9,6 +9,7 @@
 ### 🕒 Track Your Activity  
 Monitor every file edit, save, and interaction in your workspace. Stay on top of your productivity with detailed logs that offer insights into your coding habits.  
 
+
 ### 📊 Visual Insights  
 Gain a visual understanding of your coding patterns with GitHub-style calendars, charts, and graphs. Instantly identify your most productive times and areas for improvement.  
 
@@ -18,8 +19,7 @@ Generate and export detailed reports based on your coding activity. Use these re
 ### 🔐 Seamless Authentication  
 Log in or sign up with ease to access personalized analytics and reports.  
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
+![auth panel gif](https://raw.githubusercontent.com/FameILY/CodeIQ_WebApp/refs/heads/main/frontend/public/assets/docs/stats.png)
 
 ## Requirements
 
@@ -32,6 +32,7 @@ This extension contributes the following settings:
 
 * `coderhabit.activateCodeIQ`: Enable The Extention by Logging in.
 
+![auth panel gif](https://raw.githubusercontent.com/FameILY/CodeIQ_WebApp/refs/heads/main/frontend/public/assets/docs/command.gif)
 
 ## 🐛 Known Issues  
 
@@ -44,7 +45,7 @@ Currently, there are no known issues. If you encounter any, please report them [
 
 ## 📖 For More Information  
 
-- [Visual Studio Coder Marketplace](https://marketplace.visualstudio.com)  
+- [Visual Studio Coder Marketplace](https://marketplace.visualstudio.com/items?itemName=xroot.coderhabit)  
 - [Coder Habit Documentation](https://coderhabit.xyz/docs)  
 
 

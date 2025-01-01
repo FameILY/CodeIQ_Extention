@@ -1,6 +1,6 @@
-# Code Habit - Boost Your Coding Productivity  
+# Coder Habit - Boost Your Coding Productivity  
 
-**Code Habit** is the ultimate VS Code extension for tracking and analyzing your coding activity. Transform the way you work with tailored insights, visual patterns, and customizable reports to streamline your workflow and enhance productivity.  
+**Coder Habit** is the ultimate VS Coder extension for tracking and analyzing your coding activity. Transform the way you work with tailored insights, visual patterns, and customizable reports to streamline your workflow and enhance productivity.  
 
 ---
 
@@ -30,12 +30,12 @@ Log in or sign up with ease to access personalized analytics and reports.
 
 This extension contributes the following settings:
 
-* `codehabit.activateCodeIQ`: Enable The Extention by Logging in.
+* `coderhabit.activateCodeIQ`: Enable The Extention by Logging in.
 
 
 ## 🐛 Known Issues  
 
-Currently, there are no known issues. If you encounter any, please report them [here](https://codehabit.xyz).  
+Currently, there are no known issues. If you encounter any, please report them [here](https://coderhabit.xyz).  
 
 ## 📝 Release Notes  
 
@@ -44,8 +44,8 @@ Currently, there are no known issues. If you encounter any, please report them [
 
 ## 📖 For More Information  
 
-- [Visual Studio Code Marketplace](https://marketplace.visualstudio.com)  
-- [Code Habit Documentation](https://codehabit.xyz/docs)  
+- [Visual Studio Coder Marketplace](https://marketplace.visualstudio.com)  
+- [Coder Habit Documentation](https://coderhabit.xyz/docs)  
 
 
 

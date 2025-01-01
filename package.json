@@ -1,12 +1,13 @@
 {
-  "name": "codehabit",
-  "displayName": "Code Habit",
-  "description": "Boost your productivity with Code Habit, the ultimate VS Code extension for tracking and analyzing your coding activity. Gain insights with detailed logs, visual patterns, and custom reports to optimize your workflow and elevate your coding experience.",
+  "name": "coderhabit",
+  "displayName": "Coder Habit",
+  "description": "Boost your productivity with Coder Habit, the ultimate VS Coder extension for tracking and analyzing your coding activity. Gain insights with detailed logs, visual patterns, and custom reports to optimize your workflow and elevate your coding experience.",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.96.0"
   },
-  "icon": "CodeHabit.png",
+  "publisher": "Xroot",
+  "icon": "coderhabit.png",
   "categories": [
     "Other"
   ],
@@ -14,16 +15,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "codehabit.activateCodeIQ",
-        "title": "Activate Code Habit"
-      }
-    ],
-    "languages": [
-      {
-        "id": "*",
-        "extensions": ["*"],
-        "aliases": ["All Languages"],
-        "mimetypes": ["*/*"]
+        "command": "coderhabit.activateCodeIQ",
+        "title": "Activate Coder Habit"
       }
     ]
   },

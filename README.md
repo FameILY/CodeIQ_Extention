@@ -1,65 +1,54 @@
-# codeiq README
+# Code IQ - Boost Your Coding Productivity  
 
-This is the README for your extension "codeiq". After writing up a brief description, we recommend including the following sections.
+**Code IQ** is the ultimate VS Code extension for tracking and analyzing your coding activity. Transform the way you work with tailored insights, visual patterns, and customizable reports to streamline your workflow and enhance productivity.  
 
-## Features
+---
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+## 🚀 Features  
 
-For example if there is an image subfolder under your extension project workspace:
+### 🕒 Track Your Activity  
+Monitor every file edit, save, and interaction in your workspace. Stay on top of your productivity with detailed logs that offer insights into your coding habits.  
+
+### 📊 Visual Insights  
+Gain a visual understanding of your coding patterns with GitHub-style calendars, charts, and graphs. Instantly identify your most productive times and areas for improvement.  
+
+### 📋 Custom Reports  
+Generate and export detailed reports based on your coding activity. Use these reports to track your progress over time or share insights with your team.  
+
+### 🔐 Seamless Authentication  
+Log in or sign up with ease to access personalized analytics and reports.  
 
 \!\[feature X\]\(images/feature-x.png\)
 
 > Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
 
+
 ## Requirements
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- Internet access for syncing and generating activity reports.  
+
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
 This extension contributes the following settings:
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+* `codeiq.activateCodeIQ`: Enable The Extention by Logging in.
 
-## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+## 🐛 Known Issues  
 
-## Release Notes
+Currently, there are no known issues. If you encounter any, please report them [here](https://codeiq.xyz).  
 
-Users appreciate release notes as you update your extension.
+## 📝 Release Notes  
 
-### 1.0.0
+### 0.0.1  
+- Initial release with activity tracking and visual insights.  
 
-Initial release of ...
+## 📖 For More Information  
 
-### 1.0.1
+- [Visual Studio Code Marketplace](https://marketplace.visualstudio.com)  
+- [Code IQ Documentation](https://codeiq.xyz/docs)  
 
-Fixed issue #.
 
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code.  Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux)
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux)
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
 
 **Enjoy!**

@@ -10,11 +10,11 @@ const user = require("./lib/user");
 let otp = null;
 
 async function activate(context) {
-  console.log("CodeIQ Extension is now active!");
+  console.log("codehabit Extension is now active!");
 
   // //show progress command
   // const showProgressCommand = vscode.commands.registerCommand(
-  //   "codeiq.showProgress",
+  //   "codehabit.showProgress",
   //   async () => {
   //     const userId = await auth.getId(context);
   //     if (!userId) {
@@ -128,7 +128,7 @@ async function activate(context) {
 
   // Start Command here
   const paneldisposable = vscode.commands.registerCommand(
-    "codeiq.activateCodeIQ",
+    "codehabit.activateCodeIQ",
     async () => {
       const panel = vscode.window.createWebviewPanel(
         "authPanel",
@@ -429,7 +429,7 @@ function getHomeScreen(email) {
         </style>
     </head>
     <body>
-        <h1>Code IQ</h1>
+        <h1>Code Habit</h1>
         <p>Welcome, ${email}</p>
         <button id="openWebPage">View Stats</button>
 

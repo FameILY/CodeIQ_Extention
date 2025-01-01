@@ -1,11 +1,12 @@
 {
-  "name": "codeiq",
-  "displayName": "Code IQ",
-  "description": "Boost your productivity with Code IQ, the ultimate VS Code extension for tracking and analyzing your coding activity. Gain insights with detailed logs, visual patterns, and custom reports to optimize your workflow and elevate your coding experience.",
+  "name": "codehabit",
+  "displayName": "Code Habit",
+  "description": "Boost your productivity with Code Habit, the ultimate VS Code extension for tracking and analyzing your coding activity. Gain insights with detailed logs, visual patterns, and custom reports to optimize your workflow and elevate your coding experience.",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.96.0"
   },
+  "icon": "CodeHabit.png",
   "categories": [
     "Other"
   ],
@@ -13,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "codeiq.activateCodeIQ",
-        "title": "Activate Code IQ"
+        "command": "codehabit.activateCodeIQ",
+        "title": "Activate Code Habit"
       }
     ],
     "languages": [

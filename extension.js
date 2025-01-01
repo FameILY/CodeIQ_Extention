@@ -12,25 +12,26 @@ let otp = null;
 async function activate(context) {
   console.log("CodeIQ Extension is now active!");
 
-  const showProgressCommand = vscode.commands.registerCommand(
-    "vsinsights.showProgress",
-    async () => {
-      const userId = await auth.getId(context);
-      if (!userId) {
-        vscode.window.showInformationMessage("Please sign in first.");
-        return;
-      }
-      try {
-        vscode.window.showInformationMessage(`Your Progress:`);
-      } catch (error) {
-        vscode.window.showErrorMessage(
-          `Error fetching progress from the backend.${error}`
-        );
-      }
-    }
-  );
+  // //show progress command
+  // const showProgressCommand = vscode.commands.registerCommand(
+  //   "codeiq.showProgress",
+  //   async () => {
+  //     const userId = await auth.getId(context);
+  //     if (!userId) {
+  //       vscode.window.showInformationMessage("Please sign in first.");
+  //       return;
+  //     }
+  //     try {
+  //       vscode.window.showInformationMessage(`Your Progress:`);
+  //     } catch (error) {
+  //       vscode.window.showErrorMessage(
+  //         `Error fetching progress from the backend.${error}`
+  //       );
+  //     }
+  //   }
+  // );
 
-  context.subscriptions.push(showProgressCommand);
+  // context.subscriptions.push(showProgressCommand);
 
   vscode.workspace.onDidChangeTextDocument(async (event) => {
     const userId = await auth.getId(context);
@@ -90,6 +91,8 @@ async function activate(context) {
     console.log(`${event.files.length} file(s) deleted.`);
   });
 
+
+// hitting mongodb to save the progress
   setInterval(async () => {
     const userId = await auth.getId(context);
     if (!userId) return;
@@ -123,8 +126,9 @@ async function activate(context) {
     }
   }, 10000);
 
+  // Start Command here
   const paneldisposable = vscode.commands.registerCommand(
-    "vsinsights.showAuthPanel",
+    "codeiq.activateCodeIQ",
     async () => {
       const panel = vscode.window.createWebviewPanel(
         "authPanel",
@@ -179,6 +183,7 @@ async function activate(context) {
   context.subscriptions.push(paneldisposable);
 }
 
+// misc functions here 
 function loadProgress() {
   if (fs.existsSync(PROGRESS_FILE)) {
     try {

@@ -103,7 +103,7 @@ async function activate(context) {
       const date = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
 
       const response = await axios.post(
-        "http://localhost:8000/sendProgress",
+        "https://coderhabit3.vercel.app/sendProgress",
         {
           userId,
           progress: progress[userId]?.progress[date] || {},
@@ -254,7 +254,7 @@ function getAuthPage() {
             height: 100vh;
         }
         h2 {
-            color: #61dafb;
+            color: #d36032;
             margin-bottom: 20px;
         }
         .form-container {
@@ -276,14 +276,14 @@ function getAuthPage() {
             color: #ffffff;
         }
         button {
-            background-color: #61dafb;
+            background-color: #d36032;
             color: #000;
             border: none;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
         button:hover {
-            background-color: #21a1f1;
+            background-color: rgb(185, 62, 14);
         }
         input {
             background-color: #3c3c3c;
@@ -291,7 +291,7 @@ function getAuthPage() {
         }
         input:focus {
             outline: none;
-            border-color: #61dafb;
+            border-color: #d36032;
         }
         .otp-input-container {
             display: flex;
@@ -304,9 +304,16 @@ function getAuthPage() {
             padding: 10px;
             font-size: 18px;
         }
+
+        .logo {
+          height: 200px;
+          width: 200px;
+        
+        }
     </style>
 </head>
 <body>
+<img src="https://raw.githubusercontent.com/FameILY/CodeIQ_WebApp/refs/heads/main/frontend/public/assets/logoCoderHabit.png" class="logo" alt="logo" />
     <div id="formContainer" class="form-container">
         <h2 id="formTitle">Authentication</h2>
         <form id="authForm">
@@ -405,7 +412,7 @@ function getHomeScreen(email) {
                 height: 100vh;
             }
             h1 {
-                color: #61dafb;
+                color: #d36032;
                 margin-bottom: 10px;
             }
             p {
@@ -417,19 +424,25 @@ function getHomeScreen(email) {
                 padding: 15px 30px;
                 font-size: 16px;
                 color: #000;
-                background-color: #61dafb;
+                background-color: #d36032;
                 border: none;
                 border-radius: 5px;
                 cursor: pointer;
                 transition: background-color 0.3s ease;
             }
             button:hover {
-                background-color: #21a1f1;
+                background-color:rgb(185, 62, 14);
             }
+            .logo {
+          height: 200px;
+          width: 200px;
+        
+        }
         </style>
     </head>
     <body>
-        <h1>Coder Habit</h1>
+    <img src="https://raw.githubusercontent.com/FameILY/CodeIQ_WebApp/refs/heads/main/frontend/public/assets/logoCoderHabit.png" class="logo" alt="logo" />
+
         <p>Welcome, ${email}</p>
         <button id="openWebPage">View Stats</button>
 
@@ -443,7 +456,7 @@ function getHomeScreen(email) {
             });
 
             document.getElementById('openWebPage').addEventListener('click', () => {
-                vscode.postMessage({ command: 'openWebPage', url: "http://localhost:3000" });
+                vscode.postMessage({ command: 'openWebPage', url: "https://coderhabit.xyz/dashboard" });
             });
         </script>
     </body>
